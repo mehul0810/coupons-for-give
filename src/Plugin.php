@@ -2,6 +2,7 @@
 namespace MG\Give\Coupons;
 
 use MG\Give\Coupons\Includes;
+use MG\Give\Coupons\Admin;
 
 // Bailout, if accessed directly.
 if ( ! defined( 'ABSPATH' ) ) {
@@ -44,6 +45,10 @@ final class Plugin {
 	 * @return void
 	 */
 	public function register_services() {
+		if ( is_admin() ) {
+			new Admin\Actions();
+		}
+
 		new Includes\Filters();
 
 		new Includes\Actions();
