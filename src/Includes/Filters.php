@@ -22,6 +22,7 @@ class Filters {
 	 */
 	public function __construct() {
 		add_filter( 'enter_title_here', [ $this, 'changeCouponsTitle' ] );
+		add_filter( 'manage_mvnm_coupon_columns', [ $this, 'addAmountColumn' ] );
 		add_filter( 'give_payment_gateways', [ $this, 'registerGateways' ] );
 		add_filter( 'give_donation_form_required_fields', [ $this, 'validate_coupon_field' ], 10, 2 );
 	}
@@ -42,6 +43,22 @@ class Filters {
 		}
 
 		return $text;
+	}
+
+	/**
+	 * Add Amount as column to `mvnm_coupon` post type.
+	 *
+	 * @param array $columns List of admin columns.
+	 *
+	 * @since  1.0.0
+	 * @access public
+	 *
+	 * @return mixed
+	 */
+	public function addAmountColumn( $columns ) {
+		$columns['amount'] = esc_html__( 'Amount', 'coupons-for-give' );
+
+		return $columns;
 	}
 
 	/**
