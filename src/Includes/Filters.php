@@ -21,8 +21,27 @@ class Filters {
 	 * @access public
 	 */
 	public function __construct() {
+		add_filter( 'enter_title_here', [ $this, 'changeCouponsTitle' ] );
 		add_filter( 'give_payment_gateways', [ $this, 'registerGateways' ] );
 		add_filter( 'give_donation_form_required_fields', [ $this, 'validate_coupon_field' ], 10, 2 );
+	}
+
+	/**
+	 * Change Coupons Post Type Title.
+	 *
+	 * @param string $text Text.
+	 *
+	 * @since  1.0.0
+	 * @access public
+	 *
+	 * @return string
+	 */
+	public function changeCouponsTitle( $text ) {
+		if ( 'mvnm_coupon' === get_post_type() ) {
+			return esc_html__( 'Type Coupon Code here', 'your_textdomain' );
+		}
+
+		return $text;
 	}
 
 	/**
