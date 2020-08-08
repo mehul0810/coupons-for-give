@@ -71,7 +71,7 @@ class Actions {
 			'show_ui'            => true,
 			'show_in_menu'       => true,
 			'query_var'          => true,
-			'rewrite'            => array( 'slug' => 'give_coupon' ),
+			'rewrite'            => array( 'slug' => 'mvnm_coupon' ),
 			'capability_type'    => 'post',
 			'has_archive'        => true,
 			'hierarchical'       => false,
@@ -79,7 +79,7 @@ class Actions {
 			'supports'           => array( 'title' ),
 		);
 
-		register_post_type( 'give_coupon', $args );
+		register_post_type( 'mvnm_coupon', $args );
 	}
 
 	/**
@@ -95,7 +95,9 @@ class Actions {
 			'coupon-details',
 			esc_html__( 'Coupon Details', 'textdomain' ),
 			[ $this, 'displayMetaboxContent' ],
-			'give_coupon'
+			'mvnm_coupon',
+            'advanced',
+            'high'
 		);
 	}
 
