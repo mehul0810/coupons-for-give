@@ -22,7 +22,7 @@ class Filters {
 	 */
 	public function __construct() {
 		add_filter( 'enter_title_here', [ $this, 'changeCouponsTitle' ] );
-		add_filter( 'manage_mvnm_coupon_columns', [ $this, 'addAmountColumn' ] );
+		add_filter( 'manage_mvnm_coupon_posts_columns', [ $this, 'addAmountColumn' ] );
 		add_filter( 'give_payment_gateways', [ $this, 'registerGateways' ] );
 		add_filter( 'give_donation_form_required_fields', [ $this, 'validate_coupon_field' ], 10, 2 );
 	}

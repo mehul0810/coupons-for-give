@@ -109,7 +109,9 @@ class Actions {
 	 *
 	 * @return void|mixed
 	 */
-	public function displayMetaboxContent( $args ) {
+	public function displayMetaboxContent( $post ) {
+		$couponAmount = get_post_meta( $post->ID, '_coupon_for_give_amount', true );
+		$couponAmount = ! empty( $couponAmount ) ? give_maybe_sanitize_amount( $couponAmount ) : 1.00;
 		?>
         <style>
             .coupons-for-give-field-wrap {
@@ -155,7 +157,7 @@ class Actions {
             <span class="coupons-for-give-money-symbol">
                 <?php echo give_currency_symbol(); ?>
             </span>
-            <input type="text" name="_coupon_for_give_amount" value="10.00" placeholder="10.00"/>
+            <input type="text" name="_coupon_for_give_amount" value="<?php echo $couponAmount; ?>" placeholder="<?php echo $couponAmount; ?>"/>
         </p>
 		<?php
 	}
@@ -171,7 +173,10 @@ class Actions {
 	 * @return void
 	 */
 	public function saveMetaboxData( $couponId ) {
+	    $postData     = give_clean( $_POST );
+	    $couponAmount = ! empty( $postData['_coupon_for_give_amount' ] ) ? $postData['_coupon_for_give_amount'] : 0;
 
+	    update_post_meta( $couponId, '_coupon_for_give_amount', give_sanitize_amount_for_db( $couponAmount ) );
 	}
 
 	/**

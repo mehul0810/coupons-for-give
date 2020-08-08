@@ -30,7 +30,7 @@ class Actions {
      * @return void
 	 */
 	public function __construct() {
-		add_action( 'manage_mvnm_coupon_custom_column', [ $this, 'addAmountColumnData' ], 10, 2);
+		add_action( 'manage_mvnm_coupon_posts_custom_column', [ $this, 'addAmountColumnData' ], 10, 2);
 		add_action( 'give_tools_tab_import_table_bottom', [ $this, 'importCouponCodeScreen' ] );
 	}
 
@@ -47,7 +47,20 @@ class Actions {
 	 */
 	public function addAmountColumnData( $column, $postId ) {
 		if ( 'amount' === $column ) {
-			echo get_post_meta( $postId, '_coupon_for_give_amount', true );
+			$couponAmount = give_maybe_sanitize_amount( get_post_meta( $postId, '_coupon_for_give_amount', true ) );
+
+			echo give_currency_filter(
+                give_format_amount(
+	                $couponAmount,
+                    [
+                        'sanitize' => false,
+                        'currency' => give_get_currency(),
+                    ]
+                ),
+                [
+	                'currency_code' => give_get_currency(),
+                ]
+            );
 		}
     }
 
