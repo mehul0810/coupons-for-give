@@ -30,8 +30,26 @@ class Actions {
      * @return void
 	 */
 	public function __construct() {
+		add_action( 'manage_mvnm_coupon_custom_column', [ $this, 'addAmountColumnData' ], 10, 2);
 		add_action( 'give_tools_tab_import_table_bottom', [ $this, 'importCouponCodeScreen' ] );
 	}
+
+	/**
+     * Add amount to column data.
+     *
+	 * @param $column
+	 * @param $postId
+     *
+     * @since  1.0.0
+     * @access public
+     *
+     * @return void
+	 */
+	public function addAmountColumnData( $column, $postId ) {
+		if ( 'amount' === $column ) {
+			echo get_post_meta( $postId, '_coupon_for_give_amount', true );
+		}
+    }
 
 	/**
 	 * Import Coupon Code Screen.
