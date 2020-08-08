@@ -109,14 +109,54 @@ class Actions {
 	 *
 	 * @return void|mixed
 	 */
-	public function displayMetaboxContent() {
+	public function displayMetaboxContent( $args ) {
 		?>
-		<div>
-			<label>
-				<?php echo __( 'Coupon Code', '' );?>
-				<input type="text" name="_coupon_for_give_coupon_code" value=""/>
-			</label>
-		</div>
+        <style>
+            .coupons-for-give-field-wrap {
+                padding: 10px 0 5px 0;
+            }
+
+            .coupons-for-give-money-symbol {
+                border-right: 0;
+                margin-right: -5px;
+                border-radius: 4px 0 0 4px;
+                border: 1px solid #7e8993;
+                background: #fcfcfc;
+                margin: 0;
+                font-size: 14px;
+                padding: 8px 8px 9px 12px;
+            }
+
+            .coupons-for-give-field-wrap label {
+                margin: 0 10px 0px 0;
+            }
+
+            .coupons-for-give-field-wrap input[type="text"] {
+                padding: 3px 5px;
+                width: 100px;
+                line-height: 2;
+                box-shadow: 0 0 0 transparent;
+                border-radius: 4px;
+                border: 1px solid #7e8993;
+                background-color: #fff;
+                color: #32373c;
+                margin-right: 0;
+                margin-left: 0;
+                vertical-align: baseline;
+                border-top-left-radius: 0;
+                border-bottom-left-radius: 0;
+                border-left: 0;
+            }
+        </style>
+        <p class="coupons-for-give-field-wrap">
+            <label for="amount">
+	            <?php esc_html_e( 'Amount', 'coupons-for-give' ); ?>
+            </label>
+            <span class="coupons-for-give-money-symbol">
+                <?php echo give_currency_symbol(); ?>
+            </span>
+            <input type="text" name="_coupon_for_give_amount" value="10.00" placeholder="10.00"/>
+        </p>
 		<?php
 	}
 
