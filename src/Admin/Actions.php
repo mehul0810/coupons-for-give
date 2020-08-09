@@ -31,7 +31,8 @@ class Actions {
 	 */
 	public function __construct() {
 	    add_action( 'admin_menu', [ $this, 'registerImportSubMenu' ] );
-		add_action( 'manage_mvnm_coupon_posts_custom_column', [ $this, 'addAmountColumnData' ], 10, 2);
+		add_action( 'manage_mvnm_coupon_posts_custom_column', [ $this, 'addAmountColumnData' ], 10, 2 );
+		add_action( 'give_donation_details_thead_before', [ $this, 'addDonationDetails' ] );
 	}
 
 	/**
@@ -147,5 +148,25 @@ class Actions {
             </div>
             <?php
         }
+	}
+
+	/**
+     * Add Donation Details.
+     *
+	 * @param int $donation_id Donation ID.
+     *
+     * @since  1.0.0
+     * @access public
+     *
+     * @return void
+	 */
+	public function addDonationDetails( $donation_id ) {
+		$couponCode = give_get_meta( $donation_id, '_coupons_for_give_coupon_used', true );
+        ?>
+        <p>
+            <strong><?php _e( 'Coupon Used:', 'give' ); ?></strong><br/>
+            <?php echo $couponCode; ?>
+        </p>
+		<?php
 	}
 }
