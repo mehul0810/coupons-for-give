@@ -56,9 +56,15 @@ class Filters {
 	 * @return mixed
 	 */
 	public function addAmountColumn( $columns ) {
-		$columns['amount'] = esc_html__( 'Amount', 'coupons-for-give' );
+		$newColumns = [
+			'amount' => esc_html__( 'Amount', 'coupons-for-give' ),
+			'status' => esc_html__( 'Status', 'coupons-for-give' ),
+			'date'   => $columns['date'],
+		];
 
-		return $columns;
+		array_pop( $columns );
+
+		return array_merge( $columns, $newColumns );
 	}
 
 	/**
