@@ -110,7 +110,7 @@ class Actions {
 	 * @return void|mixed
 	 */
 	public function displayMetaboxContent( $post ) {
-		$couponAmount = get_post_meta( $post->ID, '_coupon_for_give_amount', true );
+		$couponAmount = get_post_meta( $post->ID, '_coupons_for_give_amount', true );
 		$couponAmount = ! empty( $couponAmount ) ? give_maybe_sanitize_amount( $couponAmount ) : 1.00;
 		?>
         <style>
@@ -174,9 +174,9 @@ class Actions {
 	 */
 	public function saveMetaboxData( $couponId ) {
 	    $postData     = give_clean( $_POST );
-	    $couponAmount = ! empty( $postData['_coupon_for_give_amount' ] ) ? $postData['_coupon_for_give_amount'] : 0;
+	    $couponAmount = ! empty( $postData['_coupons_for_give_amount' ] ) ? $postData['_coupons_for_give_amount'] : 0;
 
-	    update_post_meta( $couponId, '_coupon_for_give_amount', give_sanitize_amount_for_db( $couponAmount ) );
+	    update_post_meta( $couponId, '_coupons_for_give_amount', give_sanitize_amount_for_db( $couponAmount ) );
 	}
 
 	/**
