@@ -61,6 +61,22 @@ class Actions {
 	                'currency_code' => give_get_currency(),
                 ]
             );
+		} else if ( 'status' === $column ) {
+			$status = get_post_status( $postId );
+
+			if ( 'publish' === $status ) {
+                ?>
+                <div style="background-color: darkgreen; color: #FFF;display: inline-block;padding: 3px 5px;border-radius: 5px;">
+                    <?php esc_html_e( 'Active', 'coupons-for-give' ); ?>
+                </div>
+                <?php
+            } else if ( 'expired' === $status ) {
+				?>
+                <div style="background-color: blue; color: #FFF;display: inline-block;padding: 3px 5px;border-radius: 5px;">
+					<?php esc_html_e( 'Used', 'coupons-for-give' ); ?>
+                </div>
+				<?php
+			}
 		}
     }
 
