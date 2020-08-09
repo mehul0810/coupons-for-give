@@ -101,7 +101,7 @@ class Actions {
                     [
                         'post_title'  => $value[0],
                         'meta_input'  => [
-                            '_coupons_for_give_amount' => (float) $value[1],
+                            '_coupons_for_give_amount' => give_sanitize_amount_for_db( $value[1] ),
                         ],
                         'post_type'   => 'mvnm_coupon',
                         'post_status' => 'publish',

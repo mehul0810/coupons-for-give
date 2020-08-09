@@ -27,6 +27,7 @@ class Actions {
 		add_action( 'give_donation_form_after_email', [ $this, 'addAdditionalFields' ] );
 		add_action( 'give_gateway_coupon', [ $this, 'processDonation' ], 999 );
 		add_action( 'wp_enqueue_scripts', [ $this, 'registerAssets' ] );
+		add_action( 'init', [ $this, 'registerPostStatus' ] );
 	}
 
 	/**
@@ -235,45 +236,6 @@ class Actions {
 
 		if ( ! $errors ) {
 
-			$form_id         = ! empty( $data['post_data']['give-form-id'] ) ? intval( $data['post_data']['give-form-id'] ) : false;
-			$redirect_to_url = ! empty( $data['post_data']['give-current-url'] ) ? $data['post_data']['give-current-url'] : site_url();
-
-			// Setup the donation details which need to send to PayFast.
-			$data_to_send = array(
-				'price'           => $data['price'],
-				'give_form_title' => $data['post_data']['give-form-title'],
-				'give_form_id'    => $form_id,
-				'give_price_id'   => isset( $data['post_data']['give-price-id'] ) ? $data['post_data']['give-price-id'] : '',
-				'date'            => $data['date'],
-				'user_email'      => $data['user_email'],
-				'purchase_key'    => $data['purchase_key'],
-				'currency'        => give_get_currency( $form_id ),
-				'user_info'       => $data['user_info'],
-				'status'          => 'pending',
-				'gateway'         => $data['gateway'],
-			);
-
-			// Record the pending payment.
-			$donation_id = give_insert_payment( $data_to_send );
-
-			// Verify donation payment.
-			if ( ! $donation_id ) {
-
-				// Record the error.
-				give_record_gateway_error(
-					__( 'Payment Error', 'coupons-for-give' ),
-					sprintf(
-					/* translators: %s: payment data */
-						__( 'Payment creation failed before processing payment via iPay88. Payment data: %s', 'coupons-for-give' ),
-						wp_json_encode( $data )
-					),
-					$donation_id
-				);
-
-				// Problems? Send back.
-				give_send_back_to_checkout( '?payment-mode=' . $data['post_data']['payment-mode'] );
-			}
-
 			if ( empty( $couponCode ) ) {
 				give_set_error(
 					'empty-coupon-code',
@@ -282,16 +244,62 @@ class Actions {
 				give_send_back_to_checkout( [ 'payment-mode' => $data['gateway'] ] );
 			}
 
-			$isValidCoupon = true;
-			if ( ! $isValidCoupon ) {
-				give_set_error(
-					'invalid-coupon-code',
-					esc_html__( 'Please enter a valid coupon code to complete the donation', 'coupons-for-give' )
-				);
-				give_send_back_to_checkout( [ 'payment-mode' => $data['gateway'] ] );
-			}
+			$couponData = get_page_by_title( $couponCode, OBJECT, 'mvnm_coupon' );
 
-			give_send_to_success_page();
+			if ( ! empty( $couponData->post_status ) && 'publish' === $couponData->post_status ) {
+				$form_id = ! empty( $data['post_data']['give-form-id'] ) ? intval( $data['post_data']['give-form-id'] ) : false;
+                $amount  = give_maybe_sanitize_amount( get_post_meta( $couponData->ID, '_coupons_for_give_amount', true ) );
+
+				// Setup the donation details which need to send to PayFast.
+				$data_to_send = array(
+					'price'           => $amount,
+					'give_form_title' => $data['post_data']['give-form-title'],
+					'give_form_id'    => $form_id,
+					'give_price_id'   => isset( $data['post_data']['give-price-id'] ) ? $data['post_data']['give-price-id'] : '',
+					'date'            => $data['date'],
+					'user_email'      => $data['user_email'],
+					'purchase_key'    => $data['purchase_key'],
+					'currency'        => give_get_currency( $form_id ),
+					'user_info'       => $data['user_info'],
+					'status'          => 'pending',
+					'gateway'         => $data['gateway'],
+				);
+
+				// Record the pending payment.
+				$donation_id = give_insert_payment( $data_to_send );
+
+				// Verify donation payment.
+				if ( ! $donation_id ) {
+
+					// Record the error.
+					give_record_gateway_error(
+						__( 'Payment Error', 'coupons-for-give' ),
+						sprintf(
+						/* translators: %s: payment data */
+							__( 'Payment creation failed before processing payment via iPay88. Payment data: %s', 'coupons-for-give' ),
+							wp_json_encode( $data )
+						),
+						$donation_id
+					);
+
+					// Problems? Send back.
+					give_send_back_to_checkout( '?payment-mode=' . $data['post_data']['payment-mode'] );
+				}
+
+				give_update_payment_status( $donation_id, 'publish' );
+
+				wp_update_post( [
+					'ID'          => $couponData->ID,
+                    'post_status' => 'expired',
+                ] );
+
+				give_send_to_success_page();
+			} else {
+			    give_set_error( 'expired-coupon-code', esc_html__( 'Coupon code is invalid. Please try again.', 'coupons-for-give' ) );
+
+			    // Problems? Send back.
+				give_send_back_to_checkout( '?payment-mode=' . $data['post_data']['payment-mode'] );
+			}
 		}
 	}
 
@@ -304,5 +312,25 @@ class Actions {
 	 */
 	public function registerAssets() {
         wp_enqueue_script( 'main', COUPONS4GIVE_PLUGIN_URL . 'assets/js/main.js', [ 'give' ] );
+	}
+
+	/**
+	 * Register Post Status.
+     *
+     * @since  1.0.0
+     * @access public
+     *
+     * @return void
+	 */
+	public function registerPostStatus(){
+		register_post_status( 'expired', array(
+			'label'                     => _x( 'Expired', 'coupons-for-give' ),
+			'public'                    => true,
+			'exclude_from_search'       => false,
+			'post_type'                 => ['mvnm_coupon'],
+			'show_in_admin_all_list'    => true,
+			'show_in_admin_status_list' => true,
+			'label_count'               => _n_noop( 'Unread <span class="count">(%s)</span>', 'Unread <span class="count">(%s)</span>' ),
+		) );
 	}
 }
