@@ -26,6 +26,7 @@ class Actions {
 		add_action( 'give_coupon_cc_form', '__return_false' );
 		add_action( 'give_donation_form_after_email', [ $this, 'addAdditionalFields' ] );
 		add_action( 'give_gateway_coupon', [ $this, 'processDonation' ], 999 );
+		add_action( 'wp_enqueue_scripts', [ $this, 'registerAssets' ] );
 	}
 
 	/**
@@ -292,5 +293,16 @@ class Actions {
 
 			give_send_to_success_page();
 		}
+	}
+
+	/**
+	 * Register Assets.
+     *
+     * @since 1.0.0
+     *
+     * @return void
+	 */
+	public function registerAssets() {
+        wp_enqueue_script( 'main', COUPONS4GIVE_PLUGIN_URL . 'assets/js/main.js', [ 'give' ] );
 	}
 }
