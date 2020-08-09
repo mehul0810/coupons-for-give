@@ -22,7 +22,7 @@ class Actions {
 	public function __construct() {
 		add_action( 'init', [ $this, 'registerPostTypes' ] );
 		add_action( 'add_meta_boxes', [ $this, 'registerMetaboxes' ] );
-		add_action( 'save_post', [ $this, 'saveMetaboxData' ] );
+		add_action( 'save_post_mvnm_coupon', [ $this, 'saveMetaboxData' ], 10, 2 );
 		add_action( 'give_coupon_cc_form', '__return_false' );
 		add_action( 'give_donation_form_after_email', [ $this, 'addAdditionalFields' ] );
 		add_action( 'give_gateway_coupon', [ $this, 'processDonation' ], 999 );
@@ -159,7 +159,7 @@ class Actions {
             <span class="coupons-for-give-money-symbol">
                 <?php echo give_currency_symbol(); ?>
             </span>
-            <input type="text" name="_coupon_for_give_amount" value="<?php echo $couponAmount; ?>" placeholder="<?php echo $couponAmount; ?>"/>
+            <input type="text" name="_coupons_for_give_amount" value="<?php echo $couponAmount; ?>" placeholder="<?php echo $couponAmount; ?>"/>
         </p>
 		<?php
 	}
@@ -167,18 +167,33 @@ class Actions {
 	/**
 	 * Save Metabox Data.
 	 *
-	 * @param int $couponId Coupon ID.
+	 * @param int    $couponId Coupon ID.
+	 * @param object $coupon   Coupon Object.
 	 *
 	 * @since  1.0.0
 	 * @access public
 	 *
-	 * @return void
+	 * @return int|void
 	 */
-	public function saveMetaboxData( $couponId ) {
-	    $postData     = give_clean( $_POST );
-	    $couponAmount = ! empty( $postData['_coupons_for_give_amount' ] ) ? $postData['_coupons_for_give_amount'] : 0;
+	public function saveMetaboxData( $couponId, $coupon ) {
+	    $postData        = give_clean( $_POST );
+		$newCouponAmount = ! empty( $postData['_coupons_for_give_amount' ] ) ? $postData['_coupons_for_give_amount'] : 0;
 
-	    update_post_meta( $couponId, '_coupons_for_give_amount', give_sanitize_amount_for_db( $couponAmount ) );
+		/* Get the post type object. */
+		$post_type = get_post_type_object( $coupon->post_type );
+
+		/* Check if the current user has permission to edit the post. */
+		if ( ! current_user_can( $post_type->cap->edit_post, $couponId ) ) {
+		    return $couponId;
+		}
+
+		$couponAmount = get_post_meta( $couponId, '_coupons_for_give_amount', true );
+
+		if ( $newCouponAmount && '' === $couponAmount ) {
+			add_post_meta( $couponId, '_coupons_for_give_amount', give_sanitize_amount_for_db( $newCouponAmount ) );
+		} else if ( $newCouponAmount && $newCouponAmount === $couponAmount ) {
+			update_post_meta( $couponId, '_coupons_for_give_amount', give_sanitize_amount_for_db( $newCouponAmount ) );
+		}
 	}
 
 	/**
@@ -286,6 +301,7 @@ class Actions {
 					give_send_back_to_checkout( '?payment-mode=' . $data['post_data']['payment-mode'] );
 				}
 
+				give_update_meta( $donation_id, '_coupons_for_give_coupon_used', $couponCode );
 				give_update_payment_status( $donation_id, 'publish' );
 
 				wp_update_post( [
