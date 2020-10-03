@@ -7,6 +7,8 @@
 
 namespace MG\Give\Coupons\Includes;
 
+use Give\Helpers\Form\Utils as FormUtils;
+
 // Bailout, if accessed directly.
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -23,7 +25,7 @@ class Actions {
 		add_action( 'init', [ $this, 'registerPostTypes' ] );
 		add_action( 'add_meta_boxes', [ $this, 'registerMetaboxes' ] );
 		add_action( 'save_post_mvnm_coupon', [ $this, 'saveMetaboxData' ], 10, 2 );
-		add_action( 'give_coupon_cc_form', '__return_false' );
+		add_action( 'give_coupon_cc_form', [ $this, 'output_redirect_notice' ], 10, 2 );
 		add_action( 'give_donation_form_after_email', [ $this, 'addAdditionalFields' ] );
 		add_action( 'give_gateway_coupon', [ $this, 'processDonation' ], 999 );
 		add_action( 'wp_enqueue_scripts', [ $this, 'registerAssets' ] );
@@ -165,6 +167,47 @@ class Actions {
 	}
 
 	/**
+	 * For Multi-Step Donation Form.
+	 *
+	 * @param int   $formId Donation Form ID.
+	 * @param array $args   List of arguments.
+	 * 
+	 * @since  1.0.0
+	 * @access public
+	 * 
+	 * @return mixed
+	 */
+	public function output_redirect_notice( $formId, $args ) {
+		// Bailout, if legacy donation form.
+		if ( FormUtils::isLegacyForm( $formId ) ) {
+				return;
+		}
+		
+		ob_start();
+		?>
+		<p id="give-coupon-wrap" class="form-row form-row-wide">
+			<label class="give-label" for="give-coupon">
+				<?php esc_html_e( 'Coupon Code', 'coupons-for-give' ); ?>
+				<?php if ( give_field_is_required( 'give_coupon', $formId ) ) { ?>
+					<span class="give-required-indicator">*</span>
+				<?php } ?>
+				<span class="give-tooltip give-icon give-icon-question" data-tooltip="<?php esc_attr_e( 'Phone number is required by iPay88.', 'coupons-for-give' ); ?>"></span>
+			</label>
+			<input
+				class="give-input required"
+				type="text"
+				name="give_coupon"
+				placeholder="<?php esc_attr_e( 'Coupon Code', 'coupons-for-give' ); ?>"
+				id="give-coupon"
+				value=""
+				<?php echo( give_field_is_required( 'give_coupon', $formId ) ? ' required aria-required="true" ' : '' ); ?>
+			/>
+		</p>
+		<?php
+		return ob_get_contents();
+	}
+
+	/**
 	 * Save Metabox Data.
 	 *
 	 * @param int    $couponId Coupon ID.
@@ -209,6 +252,11 @@ class Actions {
 	public function addAdditionalFields( $form_id ) {
 		// Bailout, if Coupon is not the selected payment gateway.
 		if ( 'coupon' !== give_get_chosen_gateway( $form_id ) ) {
+			return;
+		}
+
+		// Bailout, if not legacy donation form template.
+		if ( ! FormUtils::isLegacyForm( $form_id ) ) {
 			return;
 		}
 		?>
