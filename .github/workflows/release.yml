@@ -12,8 +12,6 @@ jobs:
     - name: Build
       run: |
         composer install
-        npm install
-        npm run build
     - name: Upload release asset
       uses: actions/upload-release-asset@v1
       env:
